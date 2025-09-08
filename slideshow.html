@@ -115,17 +115,40 @@
       gap: 40px;
       justify-content: center;
     }
+
+    /* Stili per la barra di progresso */
+    .progress-bar-container {
+      position: absolute;
+      bottom: 0; /* Posizionala esattamente in basso */
+      left: 0;
+      width: 100vw;
+      height: 10px; /* Altezza della barra */
+      background-color: #eee; /* Colore di sfondo della barra */
+      z-index: 10; /* Assicurati che sia sopra tutto il resto */
+    }
+
+    .progress-bar {
+      height: 100%;
+      width: 0%; /* Inizia vuota */
+      background-color: #cc0000; /* Colore rosso vivo */
+      transition: width 0s linear; /* La transizione sarà gestita da JS */
+    }
   </style>
 </head>
 <body>
 
 <div id="slideshow"></div>
+<div class="progress-bar-container">
+  <div class="progress-bar" id="progressBar"></div>
+</div>
 
 <script>
 let SLIDE_DURATION = 8000;
 let MAX_ANNUNCI = 20;
 let slides = [];
 let currentIndex = 0;
+let intervalId; // Per tenere traccia dell'intervallo
+let progressBar = document.getElementById('progressBar');
 
 Promise.all([
     fetch('stock.json').then(res => res.json()).catch(() => []),
@@ -199,13 +222,33 @@ function createSlides() {
 function startSlideshow() {
   const allSlides = document.querySelectorAll('.slide');
   if (allSlides.length === 0) return;
-  allSlides[0].classList.add('active');
 
-  setInterval(() => {
-    allSlides[currentIndex].classList.remove('active');
-    currentIndex = (currentIndex + 1) % allSlides.length;
+  // Funzione per mostrare la slide corrente e animare la barra
+  function showSlide() {
+    // Rimuove la classe 'active' da tutte le slide
+    allSlides.forEach(slide => slide.classList.remove('active'));
+    // Aggiunge la classe 'active' alla slide corrente
     allSlides[currentIndex].classList.add('active');
-  }, SLIDE_DURATION);
+
+    // Resetta la barra di progresso e la anima
+    progressBar.style.transition = 'width 0s linear'; // Rimuove la transizione per il reset
+    progressBar.style.width = '0%';
+    
+    // Forza il reflow per assicurare che il reset sia effettivo prima di iniziare la nuova transizione
+    void progressBar.offsetWidth; 
+    
+    progressBar.style.transition = `width ${SLIDE_DURATION / 1000}s linear`; // Imposta la transizione dinamica
+    progressBar.style.width = '100%';
+
+    // Avanza all'indice successivo per la prossima slide
+    currentIndex = (currentIndex + 1) % allSlides.length;
+  }
+
+  // Mostra la prima slide immediatamente
+  showSlide(); 
+
+  // Imposta l'intervallo per le slide successive
+  intervalId = setInterval(showSlide, SLIDE_DURATION);
 }
 </script>
 
