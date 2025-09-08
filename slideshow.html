@@ -7,9 +7,28 @@
   <style>
     body {
       margin: 0;
-      background-color: #fff;
       font-family: sans-serif;
       overflow: hidden;
+      
+      /* Sfondo per tutto il corpo della pagina */
+      background-image: url('static/backgrounds/background-auto-persone.jpg');
+      background-size: cover;
+      background-position: center center;
+      background-repeat: no-repeat;
+      background-attachment: fixed;
+      background-color: #fff; /* Fallback per i browser che non supportano l'opacità */
+    }
+
+    /* Contenitore per dare l'opacità solo allo sfondo */
+    .background-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: white;
+        opacity: 0.15;
+        z-index: -1;
     }
 
     .slide {
@@ -32,7 +51,6 @@
     }
 
     .promo-slide {
-      background-color: #000;
       display: flex;
       justify-content: center;
       align-items: center;
