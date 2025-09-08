@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Slideshow Auto - Rotolo</title>
+  <style>
+    body {
+      margin: 0;
+      background-color: #fff;
+      font-family: sans-serif;
+      overflow: hidden;
+    }
+
+    .slide {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      align-items: center;
+      opacity: 0;
+      transition: opacity 1s ease-in-out;
+    }
+
+    .slide.active {
+      opacity: 1;
+      z-index: 1;
+    }
+
+    .promo-slide {
+      background-color: #000;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    
+    .promo-slide img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    .image-container {
+      height: 80vh;
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+    }
+
+    .image-container img {
+      max-height: 100%;
+      width: 100%;
+      object-fit: contain;
+    }
+
+    .qr-wrapper {
+      position: absolute;
+      top: 20px;
+      right: 30px;
+      background-color: white;
+      padding: 12px;
+      border-radius: 30px;
+      border: 6px solid #333;
+      box-shadow: 0 0 20px rgba(0,0,0,0.3);
+    }
+
+    .qr-wrapper img {
+      width: 130px;
+      height: 130px;
+      display: block;
+    }
+
+    .info-box {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 20vh;
+      background-color: white;
+      box-shadow: 0 0 30px rgba(0,0,0,0.2);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 10px 40px;
+      box-sizing: border-box;
+    }
+
+    .info-box h1 {
+      font-size: 2.5vw;
+      margin: 0;
+      color: #cc0000;
+      font-weight: 900;
+      text-align: center;
+    }
+
+    .info-box .prezzo {
+      font-size: 3vw;
+      margin: 5px 0;
+      font-weight: bold;
+      color: #000;
+    }
+
+    .info-box .sottotitolo {
+      font-size: 2vw;
+      font-weight: bold;
+      color: #333;
+      display: flex;
+      gap: 40px;
+      justify-content: center;
+    }
+  </style>
+</head>
+<body>
+
+<div id="slideshow"></div>
+
+<script>
+let SLIDE_DURATION = 8000;
+let MAX_ANNUNCI = 20;
+let slides = [];
+let currentIndex = 0;
+
+Promise.all([
+    fetch('stock.json').then(res => res.json()).catch(() => []),
+    fetch('settings.json').then(res => res.json()).catch(() => ({}))
+])
+.then(([stock, settings]) => {
+    // Aggiorna le impostazioni dello slideshow dal file settings.json
+    if (settings.durata_slide) {
+        SLIDE_DURATION = settings.durata_slide * 1000;
+    }
+    if (settings.max_annunci) {
+        MAX_ANNUNCI = settings.max_annunci;
+    }
+
+    // Prepara la lista finale di slide
+    const annunciSlice = stock.slice(0, MAX_ANNUNCI);
+    let promoIndex = 0;
+    slides = annunciSlice.map(item => ({
+        type: 'annuncio',
+        ...item
+    }));
+
+    if (settings.promo && settings.promo.length > 0) {
+        // Inserisce le promozioni ogni 3 annunci
+        for (let i = 3; i < slides.length; i += 4) {
+            slides.splice(i, 0, {
+                type: 'promo',
+                immagine: settings.promo[promoIndex]
+            });
+            promoIndex = (promoIndex + 1) % settings.promo.length;
+        }
+    }
+
+    createSlides();
+    startSlideshow();
+})
+.catch(error => console.error("Errore nel caricamento dei dati:", error));
+
+function createSlides() {
+  const container = document.getElementById('slideshow');
+  slides.forEach((item, index) => {
+    let slide;
+    if (item.type === 'promo') {
+      slide = document.createElement('div');
+      slide.className = 'slide promo-slide';
+      slide.innerHTML = `<img src="${item.immagine}" alt="Promozione">`;
+    } else {
+      slide = document.createElement('div');
+      slide.className = 'slide';
+      slide.innerHTML = `
+        <div class="image-container">
+          <img src="${item.immagine}" alt="Auto">
+          <div class="qr-wrapper">
+            <img src="https://api.qrserver.com/v1/create-qr-code/?size=130x130&data=${encodeURIComponent(item.link)}" alt="QR Code">
+          </div>
+        </div>
+        <div class="info-box">
+          <h1>${item.titolo}</h1>
+          <div class="prezzo">${item.prezzo}</div>
+          <div class="sottotitolo">
+            <span>${item.anno}</span>
+            <span>${item.km}</span>
+          </div>
+        </div>
+      `;
+    }
+    container.appendChild(slide);
+  });
+}
+
+function startSlideshow() {
+  const allSlides = document.querySelectorAll('.slide');
+  if (allSlides.length === 0) return;
+  allSlides[0].classList.add('active');
+
+  setInterval(() => {
+    allSlides[currentIndex].classList.remove('active');
+    currentIndex = (currentIndex + 1) % allSlides.length;
+    allSlides[currentIndex].classList.add('active');
+  }, SLIDE_DURATION);
+}
+</script>
+
+</body>
+</html>
