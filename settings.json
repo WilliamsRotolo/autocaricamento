@@ -1,8 +1,8 @@
 {
-  "durata_slide": 3,
-  "max_annunci": 20,
+  "durata_slide": 4,
+  "max_annunci": 95,
   "ordine": "Casuale",
   "promo": [
-    "static/promos/Rotolo Noleggio.png" 
+    "static/promos/Rotolo Noleggio.png"
   ]
 }
