@@ -1,0 +1,8 @@
+{
+  "durata_slide": 3,
+  "max_annunci": 20,
+  "ordine": "Casuale",
+  "promo": [
+    "static\\promos\\copertinaù.jpg"
+  ]
+}
