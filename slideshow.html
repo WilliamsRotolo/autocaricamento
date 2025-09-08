@@ -59,16 +59,20 @@
       object-fit: contain;
     }
 
-    .qr-wrapper {
+    .qr-container {
       position: absolute;
       top: 20px;
       right: 30px;
+      text-align: center;
+    }
+    
+    .qr-wrapper {
       background-color: white;
       padding: 12px;
       border-radius: 30px;
       border: 6px solid #333;
       box-shadow: 0 0 20px rgba(0,0,0,0.3);
-      text-align: center;
+      display: inline-block;
     }
 
     .qr-wrapper img {
@@ -82,11 +86,12 @@
       color: #333;
       margin-top: 10px;
       font-weight: bold;
+      text-align: center;
     }
 
     .info-box {
       position: absolute;
-      bottom: 0;
+      bottom: 10px; /* Aggiunto 10px di padding qui */
       left: 0;
       width: 100%;
       height: 20vh;
@@ -127,7 +132,7 @@
     /* Stili per la barra di progresso */
     .progress-bar-container {
       position: absolute;
-      bottom: 10px; /* Aggiunto 10px di padding */
+      bottom: 0; /* Rimane incollata in basso */
       left: 0;
       width: 100vw;
       height: 10px; /* Altezza della barra */
@@ -208,9 +213,10 @@ function createSlides() {
       slide.className = 'slide';
       slide.innerHTML = `
         <div class="image-container">
-          <img src="${item.immagine}" alt="Auto">
-          <div class="qr-wrapper">
-            <img src="https://api.qrserver.com/v1/create-qr-code/?size=130x130&data=${encodeURIComponent(item.link)}" alt="QR Code">
+          <div class="qr-container">
+            <div class="qr-wrapper">
+              <img src="https://api.qrserver.com/v1/create-qr-code/?size=130x130&data=${encodeURIComponent(item.link)}" alt="QR Code">
+            </div>
             <div class="qr-text">Inquadra per maggiori info</div>
           </div>
         </div>
