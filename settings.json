@@ -3,6 +3,6 @@
   "max_annunci": 20,
   "ordine": "Casuale",
   "promo": [
-    "static\promos\\Rotolo Noleggio.png"
+    "static\\promos\\Rotolo Noleggio.png"
   ]
 }
