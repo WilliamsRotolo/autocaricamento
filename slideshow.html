@@ -68,12 +68,20 @@
       border-radius: 30px;
       border: 6px solid #333;
       box-shadow: 0 0 20px rgba(0,0,0,0.3);
+      text-align: center;
     }
 
     .qr-wrapper img {
       width: 130px;
       height: 130px;
       display: block;
+    }
+
+    .qr-text {
+      font-size: 0.8vw;
+      color: #333;
+      margin-top: 10px;
+      font-weight: bold;
     }
 
     .info-box {
@@ -119,7 +127,7 @@
     /* Stili per la barra di progresso */
     .progress-bar-container {
       position: absolute;
-      bottom: 0; /* Posizionala esattamente in basso */
+      bottom: 10px; /* Aggiunto 10px di padding */
       left: 0;
       width: 100vw;
       height: 10px; /* Altezza della barra */
@@ -203,6 +211,7 @@ function createSlides() {
           <img src="${item.immagine}" alt="Auto">
           <div class="qr-wrapper">
             <img src="https://api.qrserver.com/v1/create-qr-code/?size=130x130&data=${encodeURIComponent(item.link)}" alt="QR Code">
+            <div class="qr-text">Inquadra per maggiori info</div>
           </div>
         </div>
         <div class="info-box">
