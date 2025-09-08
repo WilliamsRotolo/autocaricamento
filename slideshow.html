@@ -91,7 +91,7 @@
 
     .info-box {
       position: absolute;
-      bottom: 10px; /* Aggiunto 10px di padding qui */
+      bottom: 10px;
       left: 0;
       width: 100%;
       height: 20vh;
@@ -132,19 +132,19 @@
     /* Stili per la barra di progresso */
     .progress-bar-container {
       position: absolute;
-      bottom: 0; /* Rimane incollata in basso */
+      bottom: 0;
       left: 0;
       width: 100vw;
-      height: 10px; /* Altezza della barra */
-      background-color: #eee; /* Colore di sfondo della barra */
-      z-index: 10; /* Assicurati che sia sopra tutto il resto */
+      height: 10px;
+      background-color: #eee;
+      z-index: 10;
     }
 
     .progress-bar {
       height: 100%;
-      width: 0%; /* Inizia vuota */
-      background-color: #cc0000; /* Colore rosso vivo */
-      transition: width 0s linear; /* La transizione sarà gestita da JS */
+      width: 0%;
+      background-color: #cc0000;
+      transition: width 0s linear;
     }
   </style>
 </head>
@@ -160,7 +160,7 @@ let SLIDE_DURATION = 8000;
 let MAX_ANNUNCI = 20;
 let slides = [];
 let currentIndex = 0;
-let intervalId; // Per tenere traccia dell'intervallo
+let intervalId;
 let progressBar = document.getElementById('progressBar');
 
 Promise.all([
@@ -168,7 +168,6 @@ Promise.all([
     fetch('settings.json').then(res => res.json()).catch(() => ({}))
 ])
 .then(([stock, settings]) => {
-    // Aggiorna le impostazioni dello slideshow dal file settings.json
     if (settings.durata_slide) {
         SLIDE_DURATION = settings.durata_slide * 1000;
     }
@@ -176,7 +175,6 @@ Promise.all([
         MAX_ANNUNCI = settings.max_annunci;
     }
     
-    // Prepara la lista finale di slide
     const annunciSlice = stock.slice(0, MAX_ANNUNCI);
     let promoIndex = 0;
     slides = annunciSlice.map(item => ({
@@ -185,7 +183,6 @@ Promise.all([
     }));
 
     if (settings.promo && settings.promo.length > 0) {
-        // Inserisce le promozioni ogni 3 annunci
         for (let i = 3; i < slides.length; i += 4) {
             slides.splice(i, 0, {
                 type: 'promo',
@@ -213,6 +210,7 @@ function createSlides() {
       slide.className = 'slide';
       slide.innerHTML = `
         <div class="image-container">
+          <img src="${item.immagine}" alt="Auto">
           <div class="qr-container">
             <div class="qr-wrapper">
               <img src="https://api.qrserver.com/v1/create-qr-code/?size=130x130&data=${encodeURIComponent(item.link)}" alt="QR Code">
@@ -238,31 +236,18 @@ function startSlideshow() {
   const allSlides = document.querySelectorAll('.slide');
   if (allSlides.length === 0) return;
 
-  // Funzione per mostrare la slide corrente e animare la barra
   function showSlide() {
-    // Rimuove la classe 'active' da tutte le slide
     allSlides.forEach(slide => slide.classList.remove('active'));
-    // Aggiunge la classe 'active' alla slide corrente
     allSlides[currentIndex].classList.add('active');
-
-    // Resetta la barra di progresso e la anima
-    progressBar.style.transition = 'width 0s linear'; // Rimuove la transizione per il reset
+    progressBar.style.transition = 'width 0s linear';
     progressBar.style.width = '0%';
-    
-    // Forza il reflow per assicurare che il reset sia effettivo prima di iniziare la nuova transizione
-    void progressBar.offsetWidth; 
-    
-    progressBar.style.transition = `width ${SLIDE_DURATION / 1000}s linear`; // Imposta la transizione dinamica
+    void progressBar.offsetWidth;
+    progressBar.style.transition = `width ${SLIDE_DURATION / 1000}s linear`;
     progressBar.style.width = '100%';
-
-    // Avanza all'indice successivo per la prossima slide
     currentIndex = (currentIndex + 1) % allSlides.length;
   }
 
-  // Mostra la prima slide immediatamente
-  showSlide(); 
-
-  // Imposta l'intervallo per le slide successive
+  showSlide();
   intervalId = setInterval(showSlide, SLIDE_DURATION);
 }
 </script>
