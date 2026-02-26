@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -73,16 +73,6 @@ function useSlideshow(slides, duration) {
     };
   }, [index, slides, duration]); // re-run each time index changes to reset timer
 
-  // Separate effect that resets startRef and progress when index changes
-  const prevIndexRef = useRef(index);
-  useEffect(() => {
-    if (prevIndexRef.current !== index) {
-      prevIndexRef.current = index;
-      startRef.current = Date.now();
-      setProgress(0);
-    }
-  }, [index]);
-
   return { index, progress };
 }
 
@@ -92,6 +82,7 @@ function useSlideshow(slides, duration) {
 
 function CarSlide({ car }) {
   const [imgError, setImgError] = useState(false);
+  const [qrError, setQrError] = useState(false);
   const hasImage = car.immagine && !imgError;
 
   const tags = [
@@ -151,7 +142,7 @@ function CarSlide({ car }) {
         )}
 
         {/* QR code */}
-        {qrUrl && (
+        {qrUrl && !qrError && (
           <div style={s.qrBlock}>
             <img
               src={qrUrl}
@@ -159,6 +150,7 @@ function CarSlide({ car }) {
               width={110}
               height={110}
               style={s.qrImg}
+              onError={() => setQrError(true)}
             />
             <span style={s.qrLabel}>Scansiona per i dettagli</span>
           </div>
@@ -173,11 +165,35 @@ function CarSlide({ car }) {
 // ---------------------------------------------------------------------------
 
 function PromoSlide({ src }) {
+  const [err, setErr] = useState(false);
   return (
     <div style={s.promoWrapper}>
-      <img src={src} alt="Promo" style={s.promoImg} />
+      {err ? (
+        <p style={{ color: "#333", fontFamily: "'Rubik Mono One'", fontSize: "2rem" }}>
+          PROMO
+        </p>
+      ) : (
+        <img src={src} alt="Promo" style={s.promoImg} onError={() => setErr(true)} />
+      )}
     </div>
   );
+}
+
+// ---------------------------------------------------------------------------
+// Fetch with retry
+// ---------------------------------------------------------------------------
+
+async function fetchWithRetry(url, maxAttempts = 5, baseDelay = 2000) {
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      const r = await fetch(url);
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      return await r.json();
+    } catch (err) {
+      if (attempt === maxAttempts) throw err;
+      await new Promise((res) => setTimeout(res, baseDelay * attempt));
+    }
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -192,8 +208,8 @@ export default function Showroom() {
 
   useEffect(() => {
     Promise.all([
-      fetch("./stock.json").then((r) => r.json()),
-      fetch("./settings.json").then((r) => r.json()),
+      fetchWithRetry("./stock.json"),
+      fetchWithRetry("./settings.json"),
     ])
       .then(([stockData, settingsData]) => {
         setCars(stockData);
@@ -209,7 +225,10 @@ export default function Showroom() {
   const rawDuration = settings ? (settings.durata_slide || 0) * 1000 : 6000;
   const duration = Math.max(rawDuration, 2000);
   const promo = settings ? settings.promo || [] : [];
-  const slides = buildSlides(cars, promo);
+  const slides = useMemo(
+    () => (cars.length > 0 ? buildSlides(cars, promo) : []),
+    [cars, promo]
+  );
 
   const { index, progress } = useSlideshow(
     loading || error || slides.length === 0 ? [] : slides,
