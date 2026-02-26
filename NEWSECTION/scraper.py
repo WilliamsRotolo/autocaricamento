@@ -8,6 +8,7 @@ import random
 import re
 import time
 from typing import Callable
+from urllib.parse import unquote
 
 import requests
 from bs4 import BeautifulSoup
@@ -15,6 +16,10 @@ from bs4 import BeautifulSoup
 # ── Configurazione ────────────────────────────────────────────────────────────
 
 BASE_URL = "https://www.rotoloautomobili.com"
+
+HEADERS = {
+    "User-Agent": "Mozilla/5.0 (compatible; AutoScraper/1.0)",
+}
 
 SECTIONS: dict[str, dict] = {
     "km0": {
@@ -129,9 +134,11 @@ def _parse_card(a_tag, base_url: str = BASE_URL) -> dict | None:
             if b_tag:
                 marca = b_tag.get_text(strip=True)
                 # Il testo dopo il <b> è il modello base
-                # Usa get_text su t1 e rimuovi la marca dal prefisso
-                full_t1 = t1.get_text(" ", strip=True)
-                modello_base = full_t1[len(marca):].strip()
+                # Usa i NavigableString siblings per evitare problemi di prefisso
+                modello_base = "".join(
+                    str(node) for node in b_tag.next_siblings
+                    if not hasattr(node, 'name')  # NavigableString only, not Tag
+                ).strip()
             else:
                 full_t1 = t1.get_text(" ", strip=True)
                 modello_base = full_t1
@@ -155,15 +162,17 @@ def _parse_card(a_tag, base_url: str = BASE_URL) -> dict | None:
     # ── Km ────────────────────────────────────────────────────────────────────
     km = ""
     section2 = a_tag.find("div", class_="section2")
-    if section2:
-        t1_s2 = section2.find("div", class_="t1")
-        if t1_s2:
-            # "<b>Km</b> 203.000" → "203000" (solo cifre)
-            full_text = t1_s2.get_text(" ", strip=True)
-            # Rimuovi "Km" dal prefisso
-            km_text = re.sub(r"^[Kk]m\s*", "", full_text).strip()
-            # Rimuovi punti separatori migliaia
-            km = re.sub(r"[^\d]", "", km_text)
+    t1_s2 = section2.find("div", class_="t1") if section2 else None
+    if t1_s2:
+        # "<b>Km</b> 203.000" → "203000" (solo cifre)
+        full_text = t1_s2.get_text(" ", strip=True)
+        # Rimuovi "Km" dal prefisso
+        km_text = re.sub(r"^[Kk]m\s*", "", full_text).strip()
+        # Rimuovi punti separatori migliaia
+        km = re.sub(r"[^\d]", "", km_text)
+    if not km:
+        # km0 cars have 0 km; outlet cars (very old) may have missing data
+        km = "0" if "/km0/" in link else ""
 
     # ── Alimentazione e Cambio ────────────────────────────────────────────────
     alimentazione = ""
@@ -209,80 +218,90 @@ def has_next_page(html: str, current_page: int) -> bool:
     """
     Controlla se nella paginazione esiste un link per la pagina current_page+1.
     """
-    next_page = current_page + 1
     soup = BeautifulSoup(html, "html.parser")
-    # Cerca tutti i link paginazione con class cta_pageitem
+    next_page = current_page + 1
     pag_div = soup.find("div", class_="paginazione")
     if not pag_div:
         return False
     for a in pag_div.find_all("a", class_="cta_pageitem"):
-        href = a.get("href", "")
-        # Cerca Page=N nei parametri URL (decodificati o encodati)
-        if re.search(rf"[?&]Page={next_page}(?:[&%#]|$)", href):
+        href = unquote(a.get("href", ""))
+        if re.search(rf"[?&][Pp]age={next_page}(?:[&%#]|$)", href):
             return True
     return False
 
 
 # ── Scraping ──────────────────────────────────────────────────────────────────
 
-def scrape_section(
-    section_name: str,
-    log_fn: Callable = print,
-    delay: float = 1.5,
-) -> list[dict]:
-    """
-    Scrapa tutte le pagine di una sezione (km0, usato, outlet).
-    Usa 2 pagine vuote consecutive prima di fermarsi.
-    """
-    config = SECTIONS[section_name]
-    url = config["url"]
-    page_params_fn = config["page_params"]
+def scrape_section(section_name: str, log_fn=print, delay: float = 1.5) -> list[dict]:
+    """Scrapa una sezione completa con paginazione."""
+    if section_name not in SECTIONS:
+        raise ValueError(
+            f"Sezione sconosciuta: {section_name!r}. Valori validi: {list(SECTIONS)}"
+        )
 
+    config = SECTIONS[section_name]
     all_listings: list[dict] = []
     seen_links: set[str] = set()
     page = 1
-    empty_count = 0
+    empty_pages = 0
     MAX_EMPTY = 2
+    MAX_RETRIES = 3
+    MAX_PAGES = 50
 
-    while True:
-        params = page_params_fn(page)
+    while page <= MAX_PAGES:
+        params = config["page_params"](page)
         log_fn(f"[{section_name}] Pagina {page}...")
-        try:
-            resp = requests.get(url, params=params, timeout=15, headers={
-                "User-Agent": "Mozilla/5.0 (compatible; AutoScraper/1.0)"
-            })
-            resp.raise_for_status()
-            html = resp.text
-        except Exception as e:
-            log_fn(f"[{section_name}] Errore pagina {page}: {e}")
-            empty_count += 1
-            if empty_count >= MAX_EMPTY:
+
+        # Network request with retry
+        html = None
+        for attempt in range(1, MAX_RETRIES + 1):
+            try:
+                resp = requests.get(config["url"], params=params, headers=HEADERS, timeout=20)
+                resp.raise_for_status()
+                html = resp.text
+                break
+            except requests.RequestException as e:
+                log_fn(f"[{section_name}] Tentativo {attempt}/{MAX_RETRIES} fallito: {e}")
+                if attempt < MAX_RETRIES:
+                    time.sleep(delay * attempt)
+
+        if html is None:
+            log_fn(f"[{section_name}] Pagina {page}: tutti i tentativi falliti, passo alla successiva.")
+            empty_pages += 1
+            if empty_pages >= MAX_EMPTY:
                 break
             page += 1
-            time.sleep(delay + random.uniform(0, 0.5))
             continue
 
-        listings = parse_listings_from_html(html, BASE_URL)
-        new_listings = [l for l in listings if l["link"] not in seen_links]
-
+        new_listings = parse_listings_from_html(html)
         if not new_listings:
-            empty_count += 1
-            log_fn(f"[{section_name}] Pagina {page} vuota (count={empty_count})")
-            if empty_count >= MAX_EMPTY:
+            empty_pages += 1
+            log_fn(f"[{section_name}] Pagina {page} vuota ({empty_pages}/{MAX_EMPTY}).")
+            if empty_pages >= MAX_EMPTY:
                 break
-        else:
-            empty_count = 0
-            for l in new_listings:
+            page += 1
+            time.sleep(delay)
+            continue
+
+        empty_pages = 0
+        new_count = 0
+        for l in new_listings:
+            if l["link"] not in seen_links:
                 seen_links.add(l["link"])
                 all_listings.append(l)
-            log_fn(f"[{section_name}] Pagina {page}: {len(new_listings)} annunci trovati")
+                new_count += 1
+
+        log_fn(f"[{section_name}] Pagina {page}: +{new_count} nuovi (tot: {len(all_listings)})")
 
         if not has_next_page(html, page):
-            log_fn(f"[{section_name}] Nessuna pagina successiva dopo pagina {page}. Fine.")
+            log_fn(f"[{section_name}] Fine sezione (nessuna pagina successiva).")
             break
 
         page += 1
         time.sleep(delay + random.uniform(0, 0.5))
+
+    if page > MAX_PAGES:
+        log_fn(f"[{section_name}] Raggiunto limite massimo di {MAX_PAGES} pagine.")
 
     return all_listings
 
