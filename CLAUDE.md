@@ -42,5 +42,44 @@ Everything lives in `slideshow.html`. Key sections:
 
 - Background: `static/backgrounds/background-auto-persone.png`
 - Promos: `static/promos/` (paths referenced in `settings.json`)
-- Car images: external URLs from `rotoloauto.com`
+- Car images: external URLs from `rotoloautomobili.com` (S3 bucket: `mulitpubblicatorebucket.s3.eu-central-1.amazonaws.com`)
 - QR codes: generated via `api.qrserver.com` using each vehicle's `link`
+
+---
+
+## NEWSECTION — Streamlit CMS
+
+`NEWSECTION/app.py` is a Streamlit admin dashboard for managing the slideshow content. Run with:
+
+```bash
+cd NEWSECTION
+python -m streamlit run app.py
+# or double-click avvia_cms.bat
+```
+
+**Tabs:**
+1. **Dashboard** — paginated list of current listings with thumbnails
+2. **Scraping** — triggers the web scraper to pull listings from the dealer website
+3. **Editor** — inline editing of each listing (title, price, year, km, position); auto-resolves duplicate positions
+4. **Settings** — controls `durata_slide`, `max_annunci`, `ordine` for the slideshow
+5. **GitHub** — pushes `stock.json` and `settings.json` to the repo (credentials in `secrets.json`)
+
+**Scraper target** (current): `www.rotoloautomobili.com` — three sections:
+- `/lista-veicoli/km0/` — new cars (pagination: `?Page=N&NumeroVeicoli=4`)
+- `/lista-veicoli/usato/` — used cars (pagination: `?Page=N&NumeroVeicoli=100&ListaFiltri[0].Value=USATO`)
+- `/outlet/` — clearance (pagination: `?Page=N&NumeroVeicoli=10`)
+
+HTML structure on all three pages: cards are `<a>` tags, title in `<strong>`, image in last `<img>` with S3 URL, price/year/km as raw text. No CSS classes on cards — use regex patterns to extract fields.
+
+`script.py` is a legacy standalone scraper (older site, kept for reference).
+
+---
+
+## newfrontend — Design Inspiration
+
+`newfrontend/` is a React + Vite app (run with `npm install && npm run dev`) with a bold retro-neon aesthetic: gold (#FFD700), magenta (#FF00FF), cyan (#00FFFF), black. Heavy borders, offset shadows, rotated elements.
+
+**Key component for the kiosk: `newfrontend/src/Showroom.jsx`** — already implements a full-screen rotating display: auto-cycles cars every 5s, progress bar animation, contact info bar at bottom. This is the primary visual reference for the new frontend.
+
+Components to adapt: `Showroom.jsx` (essential), `CarCard.jsx` (design reference).
+Components to ignore: `ContactForm.jsx`, `Navbar.jsx`, `Hero.jsx`, `CarDetailModal.jsx`, `PdfGenerator.jsx`.
