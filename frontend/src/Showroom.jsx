@@ -169,7 +169,7 @@ function PromoSlide({ src }) {
   return (
     <div style={s.promoWrapper}>
       {err ? (
-        <p style={{ color: "#333", fontFamily: "'Rubik Mono One'", fontSize: "2rem" }}>
+        <p style={{ color: "#FFD700", fontFamily: "'Rubik Mono One'", fontSize: "2rem" }}>
           PROMO
         </p>
       ) : (
@@ -224,7 +224,7 @@ export default function Showroom() {
 
   const rawDuration = settings ? (settings.durata_slide || 0) * 1000 : 6000;
   const duration = Math.max(rawDuration, 2000);
-  const promo = settings ? settings.promo || [] : [];
+  const promo = useMemo(() => settings?.promo ?? [], [settings]);
   const slides = useMemo(
     () => (cars.length > 0 ? buildSlides(cars, promo) : []),
     [cars, promo]
