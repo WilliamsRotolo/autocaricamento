@@ -43,15 +43,15 @@ class TestParseListings:
 # ── Campi obbligatori ─────────────────────────────────────────────────────────
 
 class TestCampiObbligatori:
-    REQUIRED = {"titolo", "prezzo", "link"}
+    REQUIRED = {"titolo", "prezzo", "link", "anno", "km", "alimentazione", "cambio", "immagine"}
 
     def _check_section(self, fixture_name):
         html = (FIXTURES / fixture_name).read_text(encoding="utf-8")
         listings = parse_listings_from_html(html, BASE)
         assert listings, f"{fixture_name}: lista vuota"
         for i, l in enumerate(listings):
-            missing = {k for k in self.REQUIRED if not l.get(k)}
-            assert not missing, f"{fixture_name}[{i}] manca: {missing}\ndati: {l}"
+            missing_keys = set(self.REQUIRED) - set(l.keys())
+            assert not missing_keys, f"{fixture_name}[{i}] manca chiavi: {missing_keys}\ndati: {l}"
 
     def test_km0_campi_obbligatori(self):      self._check_section("km0_page1.html")
     def test_usato_campi_obbligatori(self):    self._check_section("usato_page1.html")

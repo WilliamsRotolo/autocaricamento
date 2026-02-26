@@ -215,7 +215,6 @@ def has_next_page(html: str, current_page: int) -> bool:
     pag_div = soup.find("div", class_="paginazione")
     if not pag_div:
         return False
-    pattern = re.compile(rf"[?&]Page={next_page}(?:&|$|%)")
     for a in pag_div.find_all("a", class_="cta_pageitem"):
         href = a.get("href", "")
         # Cerca Page=N nei parametri URL (decodificati o encodati)
