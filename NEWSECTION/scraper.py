@@ -11,7 +11,7 @@ from typing import Callable
 from urllib.parse import unquote
 
 import requests
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, NavigableString, Tag
 
 # ── Configurazione ────────────────────────────────────────────────────────────
 
@@ -137,7 +137,7 @@ def _parse_card(a_tag, base_url: str = BASE_URL) -> dict | None:
                 # Usa i NavigableString siblings per evitare problemi di prefisso
                 modello_base = "".join(
                     str(node) for node in b_tag.next_siblings
-                    if not hasattr(node, 'name')  # NavigableString only, not Tag
+                    if isinstance(node, NavigableString)
                 ).strip()
             else:
                 full_t1 = t1.get_text(" ", strip=True)
