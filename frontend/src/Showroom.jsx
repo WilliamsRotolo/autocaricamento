@@ -120,31 +120,27 @@ function CarSlide({ car }) {
 
         {/* ---- Colonna destra: info ---- */}
         <div style={s.infoCol}>
-          {/* Tipo badge (KM ZERO / USATO / OUTLET) */}
-          {tipoLabel && (
-            <div style={s.tipoBadge}>{tipoLabel}</div>
-          )}
+          {/* Gruppo superiore: badge + titolo + tags + prezzo */}
+          <div style={s.infoTop}>
+            {tipoLabel && (
+              <div style={s.tipoBadge}>{tipoLabel}</div>
+            )}
+            <h1 style={s.title}>{car.titolo ? car.titolo.toUpperCase() : ""}</h1>
+            {tags.length > 0 && (
+              <div style={s.tagsRow}>
+                {tags.map((t, i) => (
+                  <span key={i} style={s.tag}>{t.label}</span>
+                ))}
+              </div>
+            )}
+            {car.prezzo && (
+              <div style={s.priceBox}>
+                <span style={s.priceText}>{car.prezzo}</span>
+              </div>
+            )}
+          </div>
 
-          {/* Titolo */}
-          <h1 style={s.title}>{car.titolo ? car.titolo.toUpperCase() : ""}</h1>
-
-          {/* Tag row (anno / km / carburante / cambio) */}
-          {tags.length > 0 && (
-            <div style={s.tagsRow}>
-              {tags.map((t, i) => (
-                <span key={i} style={s.tag}>{t.label}</span>
-              ))}
-            </div>
-          )}
-
-          {/* Prezzo */}
-          {car.prezzo && (
-            <div style={s.priceBox}>
-              <span style={s.priceText}>{car.prezzo}</span>
-            </div>
-          )}
-
-          {/* QR code — grande e centrato */}
+          {/* QR code — ancorato al terzo inferiore */}
           {qrUrl && !qrError && (
             <div style={s.qrBlock}>
               <img
@@ -420,16 +416,24 @@ const s = {
     letterSpacing: "0.1em",
   },
 
-  // Colonna info — gap e overflow responsive
+  // Colonna info — space-between tra infoTop e qrBlock, padding per i terzi
   infoCol: {
     flex: "1",
     display: "flex",
     flexDirection: "column",
-    justifyContent: "center",
-    gap: "clamp(5px, 1vh, 14px)",
+    justifyContent: "space-between",
+    paddingTop: "clamp(1.5rem, 18vh, 7rem)",    // ~1/3 dall'alto
+    paddingBottom: "clamp(1rem, 10vh, 4rem)",   // ~1/3 dal basso
     overflow: "hidden",
     minWidth: 0,
     minHeight: 0,
+  },
+
+  // Gruppo scritte: badge + titolo + tags + prezzo
+  infoTop: {
+    display: "flex",
+    flexDirection: "column",
+    gap: "clamp(5px, 1vh, 14px)",
   },
 
   // Badge tipo
@@ -500,7 +504,6 @@ const s = {
     alignItems: "center",
     gap: "clamp(3px, 0.5vh, 7px)",
     flexShrink: 0,
-    marginTop: "auto",  // spinge il QR in fondo usando tutto lo spazio libero
   },
   qrImg: {
     border: `clamp(2px, 0.3vw, 4px) solid ${DARK}`,
