@@ -95,9 +95,8 @@ function CarSlide({ car }) {
   const tipoLabel = { km0: "KM ZERO", usato: "USATO", outlet: "OUTLET" }[car.tipo]
     ?? car.tipo?.toUpperCase() ?? "";
 
-  // QR 50% più grande: 110 → 165
   const qrUrl = car.link
-    ? `https://api.qrserver.com/v1/create-qr-code/?size=165x165&data=${encodeURIComponent(car.link)}`
+    ? `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(car.link)}`
     : null;
 
   return (
@@ -151,8 +150,6 @@ function CarSlide({ car }) {
               <img
                 src={qrUrl}
                 alt="QR code"
-                width={165}
-                height={165}
                 style={s.qrImg}
                 onError={() => setQrError(true)}
               />
@@ -300,7 +297,7 @@ export default function Showroom() {
 // ---------------------------------------------------------------------------
 
 const s = {
-  // Root — sfondo GIALLO come nell'originale
+  // Root — sfondo GIALLO
   root: {
     width: "100vw",
     height: "100vh",
@@ -312,7 +309,7 @@ const s = {
     position: "relative",
   },
 
-  // Griglia anni '80 (sottile overlay su giallo)
+  // Griglia anni '80
   bgGrid: {
     position: "fixed",
     top: 0, left: 0,
@@ -325,16 +322,18 @@ const s = {
     zIndex: 0,
   },
 
-  // Barra superiore — nera con bordo magenta
+  // Barra superiore — altezza vh, non px fissi
   topBar: {
-    height: "72px",
+    height: "8vh",
+    minHeight: "52px",
+    maxHeight: "80px",
     background: DARK,
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    padding: "0 32px",
+    padding: "0 2vw",
     flexShrink: 0,
-    borderBottom: `6px solid ${MAGENTA}`,
+    borderBottom: `clamp(3px, 0.5vh, 6px) solid ${MAGENTA}`,
     position: "relative",
     zIndex: 2,
   },
@@ -343,26 +342,27 @@ const s = {
     backgroundColor: YELLOW,
     color: DARK,
     fontFamily: "'Rubik Mono One', sans-serif",
-    fontSize: "1.6rem",
-    padding: "8px 30px",
+    fontSize: "clamp(0.85rem, 2.2vh, 1.6rem)",
+    padding: "clamp(4px,0.6vh,8px) clamp(14px,2vw,30px)",
     transform: "rotate(-0.5deg)",
-    boxShadow: `8px 8px 0 ${MAGENTA}`,
+    boxShadow: `clamp(4px,0.7vw,8px) clamp(4px,0.7vw,8px) 0 ${MAGENTA}`,
     letterSpacing: "0.02em",
+    whiteSpace: "nowrap",
   },
 
-  // Area slide — centrata su sfondo giallo
+  // Area slide — padding ridotto per dare più spazio alla card
   slideArea: {
     flex: 1,
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    padding: "20px",
+    padding: "clamp(6px, 1vmin, 14px)",
     overflow: "hidden",
     position: "relative",
     zIndex: 1,
+    minHeight: 0,
   },
 
-  // Wrapper esterno della card (occupa tutto lo spazio slide)
   slideOuter: {
     width: "100%",
     height: "100%",
@@ -371,19 +371,20 @@ const s = {
     justifyContent: "center",
   },
 
-  // Card bianca con bordo nero e ombra cyan — esattamente come l'originale
+  // Card — ombra ridotta per non essere clippata, padding e maxHeight responsive
   card: {
-    width: "95%",
-    maxWidth: "1300px",
-    maxHeight: "85%",
+    width: "96%",
+    maxWidth: "1400px",
+    height: "96%",           // altezza fissa al 96% invece di maxHeight per evitare overflow
     backgroundColor: WHITE,
-    border: `10px solid ${DARK}`,
-    boxShadow: `30px 30px 0 ${CYAN}`,
+    border: `clamp(5px, 0.6vw, 10px) solid ${DARK}`,
+    boxShadow: `clamp(8px,1.2vmin,18px) clamp(8px,1.2vmin,18px) 0 ${CYAN}`,
     display: "flex",
     flexDirection: "row",
-    padding: "30px",
+    padding: "clamp(10px, 1.4vw, 22px)",
     overflow: "hidden",
     animation: "slideIn 0.5s ease-out",
+    boxSizing: "border-box",
   },
 
   // Colonna immagine
@@ -392,11 +393,12 @@ const s = {
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    marginRight: "30px",
+    marginRight: "clamp(10px, 1.4vw, 22px)",
     overflow: "hidden",
     background: "#f4f4f4",
-    border: `4px solid ${DARK}`,
+    border: `clamp(2px, 0.3vw, 4px) solid ${DARK}`,
     minHeight: 0,
+    minWidth: 0,
   },
   carImage: {
     width: "100%",
@@ -413,99 +415,108 @@ const s = {
   },
   noPhotoText: {
     fontFamily: "'Rubik Mono One', sans-serif",
-    fontSize: "clamp(0.7rem, 1.8vw, 1.2rem)",
+    fontSize: "clamp(0.6rem, 1.5vmin, 1.1rem)",
     color: "#bbb",
     letterSpacing: "0.1em",
   },
 
-  // Colonna info
+  // Colonna info — gap e overflow responsive
   infoCol: {
     flex: "1",
     display: "flex",
     flexDirection: "column",
     justifyContent: "center",
-    gap: "18px",
+    gap: "clamp(5px, 1vh, 14px)",
     overflow: "hidden",
+    minWidth: 0,
+    minHeight: 0,
   },
 
-  // Badge tipo — magenta ruotato, come il tag "PREZZO REALE" dell'originale
+  // Badge tipo
   tipoBadge: {
     backgroundColor: MAGENTA,
     color: WHITE,
     display: "inline-block",
-    padding: "8px 18px",
+    padding: "clamp(3px,0.5vh,7px) clamp(8px,1vw,16px)",
     fontFamily: "'Rubik Mono One', sans-serif",
-    fontSize: "1rem",
+    fontSize: "clamp(0.6rem, 1.4vh, 0.95rem)",
     alignSelf: "flex-start",
     transform: "rotate(1.5deg)",
-    boxShadow: `5px 5px 0 ${DARK}`,
+    boxShadow: `3px 3px 0 ${DARK}`,
     letterSpacing: "0.04em",
+    flexShrink: 0,
   },
 
-  // Titolo — nero grande, come l'originale
+  // Titolo — vmin per mantenere proporzioni su 16:9
   title: {
     fontFamily: "'Rubik Mono One', sans-serif",
-    fontSize: "clamp(1rem, 2.4vw, 2.1rem)",
+    fontSize: "clamp(0.8rem, 2vmin, 1.9rem)",
     color: DARK,
     lineHeight: 1.1,
     letterSpacing: "0.01em",
     wordBreak: "break-word",
+    overflow: "hidden",
+    flexShrink: 0,
   },
 
-  // Tag row con bordo sinistro giallo — come il "details" dell'originale
+  // Tag row
   tagsRow: {
     display: "flex",
     flexWrap: "wrap",
-    gap: "10px",
-    borderLeft: `8px solid ${YELLOW}`,
-    paddingLeft: "16px",
+    gap: "clamp(4px, 0.6vw, 10px)",
+    borderLeft: `clamp(4px, 0.5vw, 8px) solid ${YELLOW}`,
+    paddingLeft: "clamp(8px, 1vw, 16px)",
+    flexShrink: 0,
   },
   tag: {
     fontFamily: "'Outfit', sans-serif",
     fontWeight: 700,
-    fontSize: "0.85rem",
+    fontSize: "clamp(0.6rem, 1.1vh, 0.85rem)",
     color: "#444",
     letterSpacing: "0.04em",
     textTransform: "uppercase",
   },
 
-  // Prezzo — nero con testo giallo e ombra magenta, come l'originale
+  // Prezzo
   priceBox: {
     backgroundColor: DARK,
     color: YELLOW,
-    padding: "16px 32px",
+    padding: "clamp(7px,1vh,14px) clamp(14px,2vw,28px)",
     display: "inline-block",
     alignSelf: "flex-start",
-    boxShadow: `12px 12px 0 ${MAGENTA}`,
+    boxShadow: `clamp(5px,0.7vw,10px) clamp(5px,0.7vw,10px) 0 ${MAGENTA}`,
+    flexShrink: 0,
   },
   priceText: {
     fontFamily: "'Rubik Mono One', sans-serif",
-    fontSize: "clamp(1.4rem, 3.5vw, 3rem)",
+    fontSize: "clamp(1.1rem, 2.8vmin, 2.6rem)",
     letterSpacing: "0.02em",
   },
 
-  // QR — centrato, 50% più grande (165 invece di 110)
+  // QR — dimensione CSS responsive, immagine server 150px
   qrBlock: {
     display: "flex",
     flexDirection: "column",
     alignItems: "center",
-    gap: "8px",
-    marginTop: "4px",
+    gap: "clamp(3px, 0.5vh, 7px)",
+    flexShrink: 0,
   },
   qrImg: {
-    border: `4px solid ${DARK}`,
+    border: `clamp(2px, 0.3vw, 4px) solid ${DARK}`,
     display: "block",
+    width: "clamp(80px, 13vh, 145px)",
+    height: "clamp(80px, 13vh, 145px)",
   },
   qrLabel: {
     fontFamily: "'Outfit', sans-serif",
-    fontSize: "0.75rem",
+    fontSize: "clamp(0.55rem, 1vh, 0.75rem)",
     color: "#666",
     letterSpacing: "0.04em",
   },
 
-  // Barra progresso — fill magenta
+  // Barra progresso
   progressTrack: {
-    height: "8px",
+    height: "clamp(4px, 0.6vh, 8px)",
     background: "rgba(0,0,0,0.15)",
     flexShrink: 0,
     position: "relative",
@@ -517,45 +528,48 @@ const s = {
     transition: "width 50ms linear",
   },
 
-  // Barra inferiore — nera con bordo cyan
+  // Barra inferiore — altezza vh
   bottomBar: {
-    height: "56px",
+    height: "6.5vh",
+    minHeight: "44px",
+    maxHeight: "68px",
     background: DARK,
-    borderTop: `6px solid ${CYAN}`,
+    borderTop: `clamp(3px, 0.5vh, 6px) solid ${CYAN}`,
     display: "flex",
     alignItems: "center",
     justifyContent: "space-around",
-    padding: "0 28px",
+    padding: "0 2vw",
     flexShrink: 0,
     position: "relative",
     zIndex: 2,
-    gap: "16px",
+    gap: "1vw",
   },
   phoneNumber: {
     fontFamily: "'Rubik Mono One', sans-serif",
-    fontSize: "1.4rem",
+    fontSize: "clamp(0.85rem, 1.9vh, 1.4rem)",
     color: CYAN,
     letterSpacing: "0.05em",
     whiteSpace: "nowrap",
   },
   locationsList: {
     display: "flex",
-    gap: "24px",
+    gap: "clamp(10px, 2vw, 28px)",
     alignItems: "center",
   },
   locationItem: {
     fontFamily: "'Outfit', sans-serif",
     fontWeight: 700,
-    fontSize: "0.85rem",
+    fontSize: "clamp(0.6rem, 1.2vh, 0.85rem)",
     color: WHITE,
     letterSpacing: "0.03em",
+    whiteSpace: "nowrap",
   },
   torinoBadge: {
     fontFamily: "'Rubik Mono One', sans-serif",
-    fontSize: "0.9rem",
+    fontSize: "clamp(0.6rem, 1.2vh, 0.85rem)",
     color: YELLOW,
     border: `2px solid ${YELLOW}`,
-    padding: "4px 15px",
+    padding: "clamp(2px,0.3vh,4px) clamp(8px,1vw,14px)",
     whiteSpace: "nowrap",
   },
 
@@ -566,14 +580,14 @@ const s = {
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    padding: "20px",
+    padding: "clamp(8px, 1.5vmin, 20px)",
   },
   promoImg: {
     maxWidth: "100%",
     maxHeight: "100%",
     objectFit: "contain",
-    border: `8px solid ${DARK}`,
-    boxShadow: `20px 20px 0 ${MAGENTA}`,
+    border: `clamp(4px, 0.5vw, 8px) solid ${DARK}`,
+    boxShadow: `clamp(8px,1.2vmin,20px) clamp(8px,1.2vmin,20px) 0 ${MAGENTA}`,
   },
 
   // Stato caricamento / errore
@@ -585,10 +599,10 @@ const s = {
     alignItems: "center",
     justifyContent: "center",
     fontFamily: "'Rubik Mono One', sans-serif",
-    fontSize: "1.6rem",
+    fontSize: "clamp(1rem, 2.5vh, 1.6rem)",
     color: DARK,
     letterSpacing: "0.05em",
     textAlign: "center",
-    padding: "32px",
+    padding: "2vmin",
   },
 };
