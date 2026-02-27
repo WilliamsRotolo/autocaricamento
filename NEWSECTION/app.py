@@ -4,7 +4,7 @@ import math
 from datetime import datetime
 import os
 from bs4 import Tag
-from github import Github, GithubException
+from github import Github, Auth, GithubException
 import re
 
 from scraper import run_scraper
@@ -189,7 +189,7 @@ def push_to_github(username, repo_name, token, file_entries):
     Supporta file binari (immagini) e testuali.
     """
     try:
-        g = Github(token)
+        g = Github(auth=Auth.Token(token))
         user = g.get_user(username)
         repo = user.get_repo(repo_name)
 
