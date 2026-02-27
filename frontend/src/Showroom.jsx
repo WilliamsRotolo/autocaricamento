@@ -439,7 +439,7 @@ const s = {
     display: "inline-block",
     padding: "clamp(3px,0.5vh,7px) clamp(8px,1vw,16px)",
     fontFamily: "'Rubik Mono One', sans-serif",
-    fontSize: "clamp(0.6rem, 1.4vh, 0.95rem)",
+    fontSize: "clamp(0.75rem, 1.8vh, 1.24rem)",
     alignSelf: "flex-start",
     transform: "rotate(1.5deg)",
     boxShadow: `3px 3px 0 ${DARK}`,
@@ -450,7 +450,7 @@ const s = {
   // Titolo — vmin per mantenere proporzioni su 16:9
   title: {
     fontFamily: "'Rubik Mono One', sans-serif",
-    fontSize: "clamp(0.8rem, 2vmin, 1.9rem)",
+    fontSize: "clamp(1rem, 2.6vmin, 2.5rem)",
     color: DARK,
     lineHeight: 1.1,
     letterSpacing: "0.01em",
@@ -471,7 +471,7 @@ const s = {
   tag: {
     fontFamily: "'Outfit', sans-serif",
     fontWeight: 700,
-    fontSize: "clamp(0.6rem, 1.1vh, 0.85rem)",
+    fontSize: "clamp(0.75rem, 1.4vh, 1.1rem)",
     color: "#444",
     letterSpacing: "0.04em",
     textTransform: "uppercase",
@@ -489,7 +489,7 @@ const s = {
   },
   priceText: {
     fontFamily: "'Rubik Mono One', sans-serif",
-    fontSize: "clamp(1.1rem, 2.8vmin, 2.6rem)",
+    fontSize: "clamp(1.4rem, 3.6vmin, 3.4rem)",
     letterSpacing: "0.02em",
   },
 
@@ -546,7 +546,7 @@ const s = {
   },
   phoneNumber: {
     fontFamily: "'Rubik Mono One', sans-serif",
-    fontSize: "clamp(0.85rem, 1.9vh, 1.4rem)",
+    fontSize: "clamp(1.1rem, 2.4vh, 1.8rem)",
     color: CYAN,
     letterSpacing: "0.05em",
     whiteSpace: "nowrap",
@@ -559,14 +559,14 @@ const s = {
   locationItem: {
     fontFamily: "'Outfit', sans-serif",
     fontWeight: 700,
-    fontSize: "clamp(0.6rem, 1.2vh, 0.85rem)",
+    fontSize: "clamp(0.75rem, 1.55vh, 1.1rem)",
     color: WHITE,
     letterSpacing: "0.03em",
     whiteSpace: "nowrap",
   },
   torinoBadge: {
     fontFamily: "'Rubik Mono One', sans-serif",
-    fontSize: "clamp(0.6rem, 1.2vh, 0.85rem)",
+    fontSize: "clamp(0.75rem, 1.55vh, 1.1rem)",
     color: YELLOW,
     border: `2px solid ${YELLOW}`,
     padding: "clamp(2px,0.3vh,4px) clamp(8px,1vw,14px)",
