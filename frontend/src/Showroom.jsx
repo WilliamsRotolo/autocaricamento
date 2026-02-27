@@ -500,6 +500,7 @@ const s = {
     alignItems: "center",
     gap: "clamp(3px, 0.5vh, 7px)",
     flexShrink: 0,
+    marginTop: "auto",  // spinge il QR in fondo usando tutto lo spazio libero
   },
   qrImg: {
     border: `clamp(2px, 0.3vw, 4px) solid ${DARK}`,
