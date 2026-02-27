@@ -223,10 +223,16 @@ export default function Showroom() {
   const rawDuration = settings ? (settings.durata_slide || 0) * 1000 : 6000;
   const duration    = Math.max(rawDuration, 2000);
   const promo       = useMemo(() => settings?.promo ?? [], [settings]);
-  const slides      = useMemo(
-    () => (cars.length > 0 ? buildSlides(cars, promo) : []),
-    [cars, promo]
-  );
+  const slides      = useMemo(() => {
+    if (cars.length === 0) return [];
+    // Shuffle Fisher-Yates — ordine casuale ad ogni caricamento pagina
+    const shuffled = [...cars];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    return buildSlides(shuffled, promo);
+  }, [cars, promo]);
 
   const { index, progress } = useSlideshow(
     loading || error || slides.length === 0 ? [] : slides,
