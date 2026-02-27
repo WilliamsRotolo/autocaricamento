@@ -1,13 +1,15 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import { resolve } from 'path'
 
 export default defineConfig({
   plugins: [react()],
-  base: './',          // relative paths → works on GitHub Pages and locally
+  base: './',
   build: {
-    outDir: '..',      // output to repo root (where stock.json lives)
-    emptyOutDir: false, // CRITICAL: do NOT delete other files in root
+    outDir: '..',
+    emptyOutDir: false,
     rollupOptions: {
+      input: resolve(__dirname, 'slideshow.html'),
       output: {
         assetFileNames: 'assets/[name]-[hash][extname]',
         chunkFileNames: 'assets/[name]-[hash].js',
