@@ -18,7 +18,8 @@ from bs4 import BeautifulSoup, NavigableString, Tag
 BASE_URL = "https://www.rotoloautomobili.com"
 
 HEADERS = {
-    "User-Agent": "Mozilla/5.0 (compatible; AutoScraper/1.0)",
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36",
+    "Accept-Language": "it-IT,it;q=0.9",
 }
 
 SECTIONS: dict[str, dict] = {
@@ -33,10 +34,19 @@ SECTIONS: dict[str, dict] = {
     },
     "usato": {
         "url": f"{BASE_URL}/lista-veicoli/usato/",
+        # Parametri completi richiesti dal sito — versione ridotta causa redirect a /Error
         "page_params": lambda page: {
+            "Is5OrMorePosti": "False",
+            "IsIvaEsposta": "False",
+            "IsNeoPatentati": "False",
+            "IsTrazioneIntegrale": "False",
             "Page": page,
-            "NumeroVeicoli": 100,
+            "NumeroVeicoli": 99,
+            "IsStorica": "False",
+            "ListaFiltri[0].IdCategoria": 16,
+            "ListaFiltri[0].Categoria": "Tipologia",
             "ListaFiltri[0].Value": "USATO",
+            "ListaFiltri[0].Label": "USATO",
         },
     },
     "outlet": {

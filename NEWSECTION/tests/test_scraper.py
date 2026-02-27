@@ -124,13 +124,61 @@ class TestPaginazione:
         result = has_next_page(html, current_page=1)
         assert isinstance(result, bool)
 
-    def test_pagina_2_ha_annunci_se_esiste(self):
-        """Se la pagina 2 esiste come fixture con link, deve restituire annunci."""
-        f = FIXTURES / "usato_page2.html"
-        if f.exists():
+    def test_pagine_intermedie_hanno_annunci(self):
+        """Pagine 2-5 devono avere annunci (struttura HTML uniforme su tutte le pagine)."""
+        for page_n in [2, 3, 4, 5]:
+            f = FIXTURES / f"usato_page{page_n}.html"
+            if not f.exists():
+                continue
             html = f.read_text(encoding="utf-8")
-            import re
-            links = re.findall(r'href="/auto/', html)
-            if links:  # solo se ha realmente link auto
-                listings = parse_listings_from_html(html, BASE)
-                assert len(listings) > 0, "usato page2: nessun annuncio"
+            listings = parse_listings_from_html(html, BASE)
+            assert len(listings) > 0, f"usato page{page_n}: nessun annuncio (struttura cambiata?)"
+
+    def test_has_next_true_per_pagine_intermedie(self):
+        """Pagine 1-5 devono segnalare pagina successiva disponibile."""
+        for page_n in [1, 2, 3, 4, 5]:
+            f = FIXTURES / f"usato_page{page_n}.html"
+            if not f.exists():
+                continue
+            html = f.read_text(encoding="utf-8")
+            result = has_next_page(html, current_page=page_n)
+            assert result is True, (
+                f"usato page{page_n}: has_next_page={result}, atteso True "
+                f"(scraper si fermerebbe prematuramente!)"
+            )
+
+    def test_has_next_false_per_ultima_pagina(self):
+        """L'ultima pagina NON deve segnalare pagina successiva."""
+        f = FIXTURES / "usato_page9.html"
+        if not f.exists():
+            pytest.skip("fixture usato_page9.html non presente")
+        html = f.read_text(encoding="utf-8")
+        result = has_next_page(html, current_page=9)
+        assert result is False, (
+            f"usato page9 (ultima): has_next_page={result}, atteso False "
+            f"(scraper non si fermerebbe mai!)"
+        )
+
+    def test_ultima_pagina_ha_annunci(self):
+        """Anche l'ultima pagina deve avere annunci."""
+        f = FIXTURES / "usato_page9.html"
+        if not f.exists():
+            pytest.skip("fixture usato_page9.html non presente")
+        html = f.read_text(encoding="utf-8")
+        listings = parse_listings_from_html(html, BASE)
+        assert len(listings) > 0, "usato page9: nessun annuncio"
+
+    def test_campi_obbligatori_pagine_successive(self):
+        """I campi obbligatori devono essere presenti anche nelle pagine 3-5 e 9."""
+        REQUIRED = {"titolo", "prezzo", "link", "anno", "km", "alimentazione", "cambio", "immagine"}
+        for page_n in [3, 4, 5, 9]:
+            f = FIXTURES / f"usato_page{page_n}.html"
+            if not f.exists():
+                continue
+            html = f.read_text(encoding="utf-8")
+            listings = parse_listings_from_html(html, BASE)
+            for i, l in enumerate(listings):
+                missing = REQUIRED - set(l.keys())
+                assert not missing, (
+                    f"usato_page{page_n}[{i}] manca chiavi: {missing}"
+                )
