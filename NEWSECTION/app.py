@@ -183,27 +183,30 @@ def normalize_img_candidate(candidate) -> str:
 # =========================
 # GITHUB UPLOAD
 # =========================
-def push_to_github(username, repo_name, token, file_paths):
+def push_to_github(username, repo_name, token, file_entries):
+    """
+    file_entries: lista di tuple (local_path, github_path).
+    Supporta file binari (immagini) e testuali.
+    """
     try:
         g = Github(token)
         user = g.get_user(username)
         repo = user.get_repo(repo_name)
 
-        for file_path in file_paths:
-            with open(file_path, "r", encoding="utf-8") as f:
+        for local_path, github_path in file_entries:
+            with open(local_path, "rb") as f:
                 content = f.read()
-            file_name = os.path.basename(file_path)
-
+            label = os.path.basename(github_path)
             try:
-                contents = repo.get_contents(file_name)
-                repo.update_file(contents.path, f"Aggiornamento {file_name}", content, contents.sha)
+                existing = repo.get_contents(github_path)
+                repo.update_file(github_path, f"Aggiornamento {label}", content, existing.sha)
             except GithubException as e:
                 if e.status == 404:
-                    repo.create_file(file_name, f"Creazione {file_name}", content)
+                    repo.create_file(github_path, f"Creazione {label}", content)
                 else:
-                    st.session_state.log.append(f"🔴 Errore push {file_name}: {e.data['message']}")
+                    st.session_state.log.append(f"🔴 Errore push {github_path}: {e.data['message']}")
                     return False
-            st.session_state.log.append(f"✅ Caricato '{file_name}' su '{repo_name}'")
+            st.session_state.log.append(f"✅ Caricato '{github_path}' su '{repo_name}'")
 
         return True
 
@@ -375,7 +378,49 @@ with tabs[3]:
     settings["ordine"] = st.selectbox("Ordine", ["Casuale", "Posizione"], index=["Casuale", "Posizione"].index(settings.get("ordine", "Casuale")))
 
     save_json(SETTINGS_FILE, settings)
-    st.success("✅ Impostazioni salvate automaticamente.")
+    st.success("✅ Impostazioni slideshow salvate automaticamente.")
+
+    st.divider()
+    st.subheader("🖼️ Immagini promo")
+    st.caption("Le immagini promo vengono mostrate ogni 4 auto nel carosello.")
+
+    current_promos = settings.get("promo", [])
+    if current_promos:
+        for i, promo_github_path in enumerate(current_promos):
+            local_path = os.path.join(PROMO_DIR, os.path.basename(promo_github_path))
+            col1, col2, col3 = st.columns([1, 4, 1])
+            with col1:
+                if os.path.exists(local_path):
+                    st.image(local_path, width=100)
+                else:
+                    st.write("⚠️ file locale assente")
+            with col2:
+                st.write(f"`{promo_github_path}`")
+            with col3:
+                if st.button("❌ Rimuovi", key=f"del_promo_{i}"):
+                    settings["promo"].pop(i)
+                    save_json(SETTINGS_FILE, settings)
+                    st.rerun()
+    else:
+        st.info("Nessuna immagine promo configurata.")
+
+    st.write("**Aggiungi nuova immagine promo:**")
+    uploaded = st.file_uploader(
+        "Scegli un'immagine (PNG, JPG, WEBP)",
+        type=["png", "jpg", "jpeg", "webp"],
+        key="promo_upload",
+    )
+    if uploaded is not None:
+        os.makedirs(PROMO_DIR, exist_ok=True)
+        save_path = os.path.join(PROMO_DIR, uploaded.name)
+        with open(save_path, "wb") as f:
+            f.write(uploaded.getbuffer())
+        github_path = f"static/promos/{uploaded.name}"
+        if github_path not in settings.get("promo", []):
+            settings.setdefault("promo", []).append(github_path)
+            save_json(SETTINGS_FILE, settings)
+        st.success(f"✅ '{uploaded.name}' salvata. Ricordati di fare l'upload su GitHub.")
+        st.rerun()
 
 
 # =========================
@@ -388,8 +433,21 @@ with tabs[4]:
     repo = st.text_input("Repository", secrets.get("repo", ""))
     token = st.text_input("Token", secrets.get("token", ""), type="password")
 
+    # Mostra sempre cosa verrà pushato
+    promo_files = [
+        (os.path.join(PROMO_DIR, os.path.basename(p)), p)
+        for p in settings.get("promo", [])
+        if os.path.exists(os.path.join(PROMO_DIR, os.path.basename(p)))
+    ]
+    st.write(f"**File da caricare:** `stock.json`, `settings.json`"
+             + (f" + {len(promo_files)} immagini promo" if promo_files else ""))
+
     if st.button("🚀 Carica su GitHub"):
-        success = push_to_github(username, repo, token, [STOCK_FILE, SETTINGS_FILE])
+        file_entries = [
+            (STOCK_FILE, "stock.json"),
+            (SETTINGS_FILE, "settings.json"),
+        ] + promo_files
+        success = push_to_github(username, repo, token, file_entries)
         if success:
             st.success("✅ Upload completato con successo.")
         else:
