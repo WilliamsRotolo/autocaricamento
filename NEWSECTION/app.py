@@ -429,10 +429,18 @@ with tabs[3]:
 with tabs[4]:
     st.header("⬆️ Upload su GitHub")
 
-    username = st.text_input("Username", secrets.get("username", ""))
-    repo = st.text_input("Repository", secrets.get("repo", ""))
-    token = st.text_input("Token", secrets.get("token", ""), type="password")
+    username = st.text_input("Username", secrets.get("github_user", ""))
+    repo     = st.text_input("Repository", secrets.get("github_repo", ""))
+    token    = st.text_input("Token", secrets.get("github_token", ""), type="password")
 
+    if st.button("💾 Salva credenziali in locale"):
+        secrets["github_user"]  = username
+        secrets["github_repo"]  = repo
+        secrets["github_token"] = token
+        save_json(SECRETS_FILE, secrets)
+        st.success("✅ Credenziali salvate in secrets.json (solo locale, non su Git).")
+
+    st.divider()
     # Mostra sempre cosa verrà pushato
     promo_files = [
         (os.path.join(PROMO_DIR, os.path.basename(p)), p)
