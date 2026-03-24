@@ -23,6 +23,12 @@ const CONTACT = {
 // Helpers
 // ---------------------------------------------------------------------------
 
+const VIDEO_EXTS = /\.(mp4|webm|ogg)$/i;
+
+function isVideo(src) {
+  return VIDEO_EXTS.test(src ?? "");
+}
+
 function formatKm(km) {
   if (!km) return "";
   const num = parseInt(String(km).replace(/\D/g, ""), 10);
