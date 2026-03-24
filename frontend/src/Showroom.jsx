@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 
 // ---------------------------------------------------------------------------
 // Design tokens — fedele al design NEWFRONTEND (neon retro anni '80)
@@ -59,13 +59,22 @@ function useSlideshow(slides, duration) {
   const [progress, setProgress] = useState(0);
   const startRef = useRef(Date.now());
 
+  const currentSlide = slides[index] ?? null;
+  const paused = currentSlide?.type === "promo" && isVideo(currentSlide.data ?? "");
+
+  const forceAdvance = useCallback(() => {
+    setProgress(0);
+    setIndex(i => (i + 1) % slides.length);
+  }, [slides.length]);
+
   useEffect(() => {
     if (!slides || slides.length === 0) return;
     startRef.current = Date.now();
     setProgress(0);
+    if (paused) return;
 
     const advance = setInterval(() => {
-      setIndex((i) => (i + 1) % slides.length);
+      setIndex(i => (i + 1) % slides.length);
     }, duration);
 
     const tick = setInterval(() => {
@@ -77,9 +86,9 @@ function useSlideshow(slides, duration) {
       clearInterval(advance);
       clearInterval(tick);
     };
-  }, [index, slides, duration]);
+  }, [index, slides, duration, paused]);
 
-  return { index, progress };
+  return { index, progress, forceAdvance, isVideoSlide: paused };
 }
 
 // ---------------------------------------------------------------------------
@@ -240,7 +249,7 @@ export default function Showroom() {
     return buildSlides(shuffled, promo);
   }, [cars, promo]);
 
-  const { index, progress } = useSlideshow(
+  const { index, progress, forceAdvance, isVideoSlide } = useSlideshow(
     loading || error || slides.length === 0 ? [] : slides,
     duration
   );
