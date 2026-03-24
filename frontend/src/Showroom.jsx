@@ -285,6 +285,7 @@ function VideoPromoSlide({ src, onEnded, cars }) {
           autoPlay
           muted
           playsInline
+          loop
           aria-hidden="true"
           style={{
             position: "absolute",
@@ -327,7 +328,7 @@ function VideoPromoSlide({ src, onEnded, cars }) {
           minWidth: 0,
         }}>
           {cars.map((car, i) => (
-            <MiniCarCard key={i} car={car} />
+            <MiniCarCard key={car.link ?? i} car={car} />
           ))}
         </div>
       )}
