@@ -193,6 +193,149 @@ function PromoSlide({ src }) {
 }
 
 // ---------------------------------------------------------------------------
+// VideoPromoSlide — video promo con blur BG e mini-lista auto a destra
+// ---------------------------------------------------------------------------
+
+function MiniCarCard({ car }) {
+  const [imgErr, setImgErr] = useState(false);
+  return (
+    <div style={{
+      flex: 1,
+      minHeight: 0,
+      display: "flex",
+      overflow: "hidden",
+      background: WHITE,
+      border: `3px solid ${DARK}`,
+      boxShadow: `3px 3px 0 ${CYAN}`,
+    }}>
+      {/* Immagine */}
+      <div style={{
+        width: "38%",
+        flexShrink: 0,
+        background: "#f0f0f0",
+        overflow: "hidden",
+      }}>
+        {car.immagine && !imgErr && (
+          <img
+            src={car.immagine}
+            alt={car.titolo}
+            onError={() => setImgErr(true)}
+            style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+          />
+        )}
+      </div>
+      {/* Testo */}
+      <div style={{
+        flex: 1,
+        padding: "6px 8px",
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "center",
+        gap: "4px",
+        overflow: "hidden",
+        minWidth: 0,
+      }}>
+        <div style={{
+          fontFamily: "'Rubik Mono One', sans-serif",
+          fontSize: "clamp(0.55rem, 1.2vmin, 0.9rem)",
+          color: DARK,
+          overflow: "hidden",
+          textOverflow: "ellipsis",
+          whiteSpace: "nowrap",
+        }}>
+          {car.titolo}
+        </div>
+        {car.prezzo && (
+          <div style={{
+            fontFamily: "'Rubik Mono One', sans-serif",
+            fontSize: "clamp(0.6rem, 1.3vmin, 1rem)",
+            color: YELLOW,
+            background: DARK,
+            display: "inline-block",
+            padding: "2px 6px",
+            alignSelf: "flex-start",
+          }}>
+            {car.prezzo}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function VideoPromoSlide({ src, onEnded, cars }) {
+  return (
+    <div style={{
+      width: "100%",
+      height: "100%",
+      display: "flex",
+      flexDirection: "row",
+      gap: "clamp(6px, 1vw, 14px)",
+    }}>
+      {/* Area video — flex:2 */}
+      <div style={{
+        flex: 2,
+        position: "relative",
+        overflow: "hidden",
+        background: DARK,
+      }}>
+        {/* Background video — blurrato, solo decorativo */}
+        <video
+          src={src}
+          autoPlay
+          muted
+          playsInline
+          aria-hidden="true"
+          style={{
+            position: "absolute",
+            inset: 0,
+            width: "100%",
+            height: "100%",
+            objectFit: "cover",
+            filter: "blur(24px)",
+            transform: "scale(1.1)",
+            opacity: 0.85,
+          }}
+        />
+        {/* Foreground video — crisp, centrato */}
+        <video
+          src={src}
+          autoPlay
+          muted
+          playsInline
+          onEnded={onEnded}
+          onError={onEnded}
+          style={{
+            position: "absolute",
+            left: "50%",
+            top: "50%",
+            transform: "translate(-50%, -50%)",
+            height: "100%",
+            width: "auto",
+            maxWidth: "100%",
+          }}
+        />
+      </div>
+
+      {/* Mini-lista auto — flex:1 */}
+      {cars && cars.length > 0 && (
+        <div style={{
+          flex: 1,
+          display: "flex",
+          flexDirection: "column",
+          gap: "clamp(4px, 0.6vw, 8px)",
+          minWidth: 0,
+        }}>
+          {cars.map((car, i) => (
+            <MiniCarCard key={i} car={car} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Fetch with retry
 // ---------------------------------------------------------------------------
 
