@@ -177,8 +177,21 @@ function CarSlide({ car }) {
 // PromoSlide
 // ---------------------------------------------------------------------------
 
-function PromoSlide({ src }) {
+function PromoSlide({ src, onEnded, nextCars }) {
+  // useState DEVE stare prima di qualsiasi return condizionale (Rules of Hooks)
   const [err, setErr] = useState(false);
+
+  if (isVideo(src)) {
+    return (
+      <VideoPromoSlide
+        src={src}
+        onEnded={onEnded}
+        cars={nextCars ?? []}
+      />
+    );
+  }
+
+  // Immagine promo — comportamento invariato
   return (
     <div style={s.promoWrapper}>
       {err ? (
@@ -414,9 +427,18 @@ export default function Showroom() {
   } else if (slides.length === 0) {
     slideContent = <div style={s.centerMsg}>Nessun annuncio</div>;
   } else if (currentSlide) {
-    slideContent = currentSlide.type === "promo"
-      ? <PromoSlide src={currentSlide.data} />
-      : <CarSlide key={index} car={currentSlide.data} />;
+    if (currentSlide.type === "promo") {
+      // Raccoglie i prossimi 3 annunci (tipo "car") per la sidebar di VideoPromoSlide
+      const nextCars = [];
+      for (let i = index + 1; i < slides.length && nextCars.length < 3; i++) {
+        if (slides[i].type === "car") {
+          nextCars.push(slides[i].data);
+        }
+      }
+      slideContent = <PromoSlide src={currentSlide.data} onEnded={forceAdvance} nextCars={nextCars} />;
+    } else {
+      slideContent = <CarSlide key={index} car={currentSlide.data} />;
+    }
   }
 
   return (
