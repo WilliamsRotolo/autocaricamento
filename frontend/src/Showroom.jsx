@@ -392,6 +392,21 @@ export default function Showroom() {
       });
   }, []);
 
+  // Auto-reload quando il listino cambia (entro 5 minuti dal push CMS)
+  useEffect(() => {
+    let etag = null;
+    const check = async () => {
+      try {
+        const res = await fetch("./stock.json", { method: "HEAD", cache: "no-store" });
+        const current = res.headers.get("etag") || res.headers.get("last-modified");
+        if (etag === null) { etag = current; return; }
+        if (current && current !== etag) window.location.reload();
+      } catch { /* rete assente, riprova al prossimo tick */ }
+    };
+    const id = setInterval(check, 5 * 60 * 1000);
+    return () => clearInterval(id);
+  }, []);
+
   const rawDuration = settings ? (settings.durata_slide || 0) * 1000 : 6000;
   const duration    = Math.max(rawDuration, 2000);
   const promo       = useMemo(() => settings?.promo ?? [], [settings]);
