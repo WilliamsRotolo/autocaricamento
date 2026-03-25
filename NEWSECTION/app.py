@@ -384,16 +384,25 @@ with tabs[3]:
     st.subheader("🖼️ Immagini promo")
     st.caption("Le immagini promo vengono mostrate ogni 4 auto nel carosello.")
 
+    VIDEO_EXTS = {".mp4", ".webm", ".ogg"}
+
     current_promos = settings.get("promo", [])
     if current_promos:
         for i, promo_github_path in enumerate(current_promos):
             local_path = os.path.join(PROMO_DIR, os.path.basename(promo_github_path))
+            ext = os.path.splitext(promo_github_path)[1].lower()
+            is_video = ext in VIDEO_EXTS
             col1, col2, col3 = st.columns([1, 4, 1])
             with col1:
-                if os.path.exists(local_path):
-                    st.image(local_path, width=100)
-                else:
+                if not os.path.exists(local_path):
                     st.write("⚠️ file locale assente")
+                elif is_video:
+                    st.write(f"🎬 video `{ext}`")
+                else:
+                    try:
+                        st.image(local_path, width=100)
+                    except Exception:
+                        st.write("⚠️ Immagine non caricabile")
             with col2:
                 st.write(f"`{promo_github_path}`")
             with col3:
@@ -402,12 +411,12 @@ with tabs[3]:
                     save_json(SETTINGS_FILE, settings)
                     st.rerun()
     else:
-        st.info("Nessuna immagine promo configurata.")
+        st.info("Nessuna promo configurata.")
 
-    st.write("**Aggiungi nuova immagine promo:**")
+    st.write("**Aggiungi nuova promo (immagine o video):**")
     uploaded = st.file_uploader(
-        "Scegli un'immagine (PNG, JPG, WEBP)",
-        type=["png", "jpg", "jpeg", "webp"],
+        "Scegli un file (PNG, JPG, WEBP, MP4, WEBM)",
+        type=["png", "jpg", "jpeg", "webp", "mp4", "webm"],
         key="promo_upload",
     )
     if uploaded is not None:
@@ -448,7 +457,7 @@ with tabs[4]:
         if os.path.exists(os.path.join(PROMO_DIR, os.path.basename(p)))
     ]
     st.write(f"**File da caricare:** `stock.json`, `settings.json`"
-             + (f" + {len(promo_files)} immagini promo" if promo_files else ""))
+             + (f" + {len(promo_files)} file promo" if promo_files else ""))
 
     if st.button("🚀 Carica su GitHub"):
         file_entries = [

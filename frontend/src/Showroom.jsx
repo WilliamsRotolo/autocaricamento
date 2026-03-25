@@ -413,6 +413,16 @@ export default function Showroom() {
 
   const currentSlide = slides[index] || null;
 
+  const nextCars = useMemo(() => {
+    if (!slides || slides.length === 0) return [];
+    return slides
+      .slice(index + 1)
+      .concat(slides.slice(0, index))
+      .filter(s => s.type === "car")
+      .slice(0, 3)
+      .map(s => s.data);
+  }, [slides, index]);
+
   let slideContent;
   if (loading) {
     slideContent = <div style={s.centerMsg}>Caricamento...</div>;
@@ -428,16 +438,6 @@ export default function Showroom() {
     slideContent = <div style={s.centerMsg}>Nessun annuncio</div>;
   } else if (currentSlide) {
     if (currentSlide.type === "promo") {
-      // Raccoglie i prossimi 3 annunci (tipo "car") per la sidebar di VideoPromoSlide
-      const nextCars = useMemo(() => {
-        if (!slides || slides.length === 0) return [];
-        return slides
-          .slice(index + 1)
-          .concat(slides.slice(0, index))
-          .filter(s => s.type === "car")
-          .slice(0, 3)
-          .map(s => s.data);
-      }, [slides, index]);
       slideContent = (
         <PromoSlide
           src={currentSlide.data}
