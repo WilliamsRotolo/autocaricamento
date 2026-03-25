@@ -429,13 +429,22 @@ export default function Showroom() {
   } else if (currentSlide) {
     if (currentSlide.type === "promo") {
       // Raccoglie i prossimi 3 annunci (tipo "car") per la sidebar di VideoPromoSlide
-      const nextCars = [];
-      for (let i = index + 1; i < slides.length && nextCars.length < 3; i++) {
-        if (slides[i].type === "car") {
-          nextCars.push(slides[i].data);
-        }
-      }
-      slideContent = <PromoSlide src={currentSlide.data} onEnded={forceAdvance} nextCars={nextCars} />;
+      const nextCars = useMemo(() => {
+        if (!slides || slides.length === 0) return [];
+        return slides
+          .slice(index + 1)
+          .concat(slides.slice(0, index))
+          .filter(s => s.type === "car")
+          .slice(0, 3)
+          .map(s => s.data);
+      }, [slides, index]);
+      slideContent = (
+        <PromoSlide
+          src={currentSlide.data}
+          onEnded={isVideoSlide ? forceAdvance : undefined}
+          nextCars={isVideoSlide ? nextCars : undefined}
+        />
+      );
     } else {
       slideContent = <CarSlide key={index} car={currentSlide.data} />;
     }
