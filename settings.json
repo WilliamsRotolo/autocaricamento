@@ -1,6 +1,6 @@
 {
   "durata_slide": 6,
-  "max_annunci": 95,
+  "max_annunci": 100,
   "ordine": "Casuale",
   "promo": [
     "static/promos/test_video.mp4"
